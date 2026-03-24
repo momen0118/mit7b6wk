@@ -1,7 +1,7 @@
 // ===== State =====
 const state = {
   apiKey: localStorage.getItem('claude_api_key') || '',
-  model: localStorage.getItem('claude_model') || 'claude-4-opus-20260301',
+  model: localStorage.getItem('claude_model') || 'claude-opus-4-6',
   systemPrompt: localStorage.getItem('claude_system_prompt') || '',
   conversations: JSON.parse(localStorage.getItem('claude_conversations') || '{}'),
   currentConvId: localStorage.getItem('claude_current_conv') || null,
