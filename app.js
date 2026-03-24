@@ -1,7 +1,7 @@
 // ===== State =====
 const state = {
   apiKey: localStorage.getItem('claude_api_key') || '',
-  model: localStorage.getItem('claude_model') || 'claude-sonnet-4-20250514',
+  model: localStorage.getItem('claude_model') || 'claude-4-opus-20260301',
   systemPrompt: localStorage.getItem('claude_system_prompt') || '',
   conversations: JSON.parse(localStorage.getItem('claude_conversations') || '{}'),
   currentConvId: localStorage.getItem('claude_current_conv') || null,
@@ -72,7 +72,7 @@ function saveSettingsToStorage() {
 }
 
 function updateModelBadge() {
-  const name = state.model.includes('haiku') ? 'Haiku' : 'Sonnet';
+  const name = state.model.includes('opus') ? 'Opus' : state.model.includes('haiku') ? 'Haiku' : 'Sonnet';
   dom.modelBadge.textContent = name;
 }
 
