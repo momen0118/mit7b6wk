@@ -3,6 +3,7 @@ const state = {
   apiKey: localStorage.getItem('claude_api_key') || '',
   model: localStorage.getItem('claude_model') || 'claude-opus-4-6',
   systemPrompt: localStorage.getItem('claude_system_prompt') || '',
+  knowledgeText: localStorage.getItem('claude_knowledge') || '',
   conversations: JSON.parse(localStorage.getItem('claude_conversations') || '{}'),
   currentConvId: localStorage.getItem('claude_current_conv') || null,
   isStreaming: false,
@@ -30,6 +31,8 @@ const dom = {
   toggleApiKey: $('#toggleApiKey'),
   modelSelect: $('#modelSelect'),
   systemPrompt: $('#systemPrompt'),
+  knowledgeText: $('#knowledgeText'),
+  knowledgeToggle: $('#knowledgeToggle'),
   saveSettings: $('#saveSettings'),
   headerTitle: $('#headerTitle'),
   modelBadge: $('#modelBadge'),
@@ -55,16 +58,28 @@ function loadSettings() {
   dom.apiKeyInput.value = state.apiKey;
   dom.modelSelect.value = state.model;
   dom.systemPrompt.value = state.systemPrompt;
+  dom.knowledgeText.value = state.knowledgeText;
+  // Set toggle based on current conversation
+  const conv = state.currentConvId && state.conversations[state.currentConvId];
+  dom.knowledgeToggle.checked = conv ? conv.useKnowledge !== false : true;
 }
 
 function saveSettingsToStorage() {
   state.apiKey = dom.apiKeyInput.value.trim();
   state.model = dom.modelSelect.value;
   state.systemPrompt = dom.systemPrompt.value.trim();
+  state.knowledgeText = dom.knowledgeText.value.trim();
 
   localStorage.setItem('claude_api_key', state.apiKey);
   localStorage.setItem('claude_model', state.model);
   localStorage.setItem('claude_system_prompt', state.systemPrompt);
+  localStorage.setItem('claude_knowledge', state.knowledgeText);
+
+  // Save knowledge toggle per conversation
+  if (state.currentConvId && state.conversations[state.currentConvId]) {
+    state.conversations[state.currentConvId].useKnowledge = dom.knowledgeToggle.checked;
+    saveConversations();
+  }
 
   updateModelBadge();
   closeSettingsModal();
@@ -102,6 +117,7 @@ function createNewConversation() {
   state.conversations[id] = {
     title: '新しい会話',
     messages: [],
+    useKnowledge: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -337,13 +353,19 @@ async function callClaudeAPI(messages) {
 
   const body = {
     model: state.model,
-    max_tokens: 4096,
+    max_tokens: 8192,
     messages: messages,
     stream: true,
   };
 
-  if (state.systemPrompt) {
-    body.system = state.systemPrompt;
+  // Build system prompt with optional knowledge
+  const conv = state.currentConvId && state.conversations[state.currentConvId];
+  const useKnowledge = conv ? conv.useKnowledge !== false : true;
+  let systemParts = [];
+  if (state.systemPrompt) systemParts.push(state.systemPrompt);
+  if (useKnowledge && state.knowledgeText) systemParts.push(state.knowledgeText);
+  if (systemParts.length > 0) {
+    body.system = systemParts.join('\n\n---\n\n');
   }
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -523,12 +545,6 @@ function autoResize(textarea) {
 function bindEvents() {
   // Send message
   dom.sendBtn.addEventListener('click', sendMessage);
-  dom.messageInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
 
   // Auto-resize + enable/disable send
   dom.messageInput.addEventListener('input', () => {

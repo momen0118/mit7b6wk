@@ -47,6 +47,20 @@
           <label for="systemPrompt">System Prompt</label>
           <textarea id="systemPrompt" rows="4" placeholder="(オプション) AIの振る舞いを指定..."></textarea>
         </div>
+        <div class="setting-group">
+          <label for="knowledgeText">ナレッジ</label>
+          <textarea id="knowledgeText" rows="4" placeholder="会話に付与する知識や設定文..."></textarea>
+          <p class="setting-hint">オンにした会話で、システムプロンプトの後ろに自動付与される</p>
+        </div>
+        <div class="setting-group">
+          <div class="toggle-row">
+            <label for="knowledgeToggle">この会話でナレッジを使う</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="knowledgeToggle" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
         <button class="btn-save" id="saveSettings">保存</button>
       </div>
     </div>
